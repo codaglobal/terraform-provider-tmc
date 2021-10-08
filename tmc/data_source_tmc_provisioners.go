@@ -26,10 +26,9 @@ func dataSourceTmcProvisioners() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"management_cluster_name": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Management Cluster Name of the Tanzu Provisioners",
-				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"labels": labelsSchema(),
 		},
@@ -54,7 +53,7 @@ func dataSourceTmcProvisionersRead(ctx context.Context, d *schema.ResourceData, 
 	provisionerIds := make([]interface{}, len(res))
 
 	for i, provisioner := range res {
-		provisionerNames[i] = provisioner.FullName.SimpleFullName.Name
+		provisionerNames[i] = provisioner.FullName.Name
 		provisionerIds[i] = provisioner.Meta.UID
 	}
 
