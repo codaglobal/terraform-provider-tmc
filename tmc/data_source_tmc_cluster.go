@@ -86,19 +86,16 @@ func dataSourceCluster() *schema.Resource {
 							Description: "Name of the SSH Keypair used in the AWS Cluster",
 							Computed:    true,
 						},
-						// "pods_cidrblocks": {
-						// 	Type:        schema.TypeList,
-						// 	Description: "CIDR blocks allocated to the pods in the cluster",
-						// 	Computed:    true,
-						// 	Elem: &schema.Resource{
-						// 		Schema: map[string]*schema.Schema{
-						// 			"cidr_blocks": {
-						// 				Type:     schema.TypeString,
-						// 				Computed: true,
-						// 			},
-						// 		},
-						// 	},
-						// },
+						"pod_cidrblock": {
+							Type:        schema.TypeString,
+							Description: "CIDR block used by the Cluster's Pods",
+							Computed:    true,
+						},
+						"service_cidrblock": {
+							Type:        schema.TypeString,
+							Description: "CIDR block used by the Cluster's Services",
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -154,9 +151,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 func flattenAwsData(data *tanzuclient.Cluster) map[string]interface{} {
 	aws := make(map[string]interface{})
 
-	// pods_cidrs := make([]interface{}, 0)
-	// pods_cidrs = append(pods_cidrs, data.Spec.TkgAws.Settings.Network.ClusterNetwork.Pods)
-
 	aws["availability_zones"] = data.Spec.TkgAws.Topology.ControlPlane.AvailabilityZones
 	aws["instance_type"] = data.Spec.TkgAws.Topology.ControlPlane.InstanceType
 	aws["vpc_cidrblock"] = data.Spec.TkgAws.Settings.Network.Provider.Vpc.CidrBlock
@@ -164,15 +158,8 @@ func flattenAwsData(data *tanzuclient.Cluster) map[string]interface{} {
 	aws["credential_name"] = data.Spec.TkgAws.Distribution.ProvisionerCredentialName
 	aws["version"] = data.Spec.TkgAws.Distribution.Version
 	aws["ssh_key"] = data.Spec.TkgAws.Settings.Security.SshKey
-	// aws["pods_cidrblocks"] = pods_cidrs
+	aws["pod_cidrblock"] = data.Spec.TkgAws.Settings.Network.ClusterNetwork.Pods[0].CidrBlocks
+	aws["service_cidrblock"] = data.Spec.TkgAws.Settings.Network.ClusterNetwork.Services[0].CidrBlocks
 
 	return aws
 }
-
-// func sliceToStrMap(elements []string) map[string]string {
-// 	elementMap := make(map[string]string)
-// 	for _, s := range elements {
-// 		elementMap[s] = s
-// 	}
-// 	return elementMap
-// }

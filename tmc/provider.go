@@ -45,6 +45,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"tmc_workspace":     resourceTmcWorkspace(),
 			"tmc_cluster_group": resourceClusterGroup(),
+			"tmc_cluster":       resourceCluster(),
 		},
 	}
 
