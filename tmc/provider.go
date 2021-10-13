@@ -39,6 +39,7 @@ func Provider() *schema.Provider {
 			"tmc_cluster_group":  dataSourceClusterGroup(),
 			"tmc_cluster_groups": dataSourceClusterGroups(),
 			"tmc_cluster":        dataSourceCluster(),
+			"tmc_nodepool":       dataSourceNodePool(),
 		},
 
 		// List of Resources supported by the provider
@@ -46,6 +47,7 @@ func Provider() *schema.Provider {
 			"tmc_workspace":     resourceTmcWorkspace(),
 			"tmc_cluster_group": resourceClusterGroup(),
 			"tmc_cluster":       resourceCluster(),
+			"tmc_nodepool":      resourceNodePool(),
 		},
 	}
 

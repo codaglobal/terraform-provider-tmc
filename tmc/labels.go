@@ -23,3 +23,11 @@ func labelsSchemaComputed() *schema.Schema {
 		Computed: true,
 	}
 }
+
+func labelsSchemaImmutable() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeMap,
+		Optional: true,
+		ForceNew: true,
+	}
+}

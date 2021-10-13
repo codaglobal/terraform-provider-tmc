@@ -70,7 +70,7 @@ func resourceCluster() *schema.Resource {
 						},
 						"version": {
 							Type:        schema.TypeString,
-							Description: "Provisioner credential used to create the cluster",
+							Description: "Kubernetes version to be used",
 							Required:    true,
 						},
 						"credential_name": {
@@ -170,7 +170,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("labels", cluster.Meta.Labels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read clustergroup",
+			Summary:  "Failed to read cluster",
 			Detail:   fmt.Sprintf("Error getting labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
