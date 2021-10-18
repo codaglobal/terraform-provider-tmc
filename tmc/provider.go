@@ -38,13 +38,18 @@ func Provider() *schema.Provider {
 			"tmc_provisioners":                   dataSourceTmcProvisioners(),
 			"tmc_provisioner":                    dataSourceTmcProvisioner(),
 			"tmc_aws_data_protection_credential": dataSourceTmcAwsDataProtectionCredential(),
+			"tmc_aws_storage_credential":         dataSourceTmcAwsStorageCredential(),
+			"tmc_observability_credential":       dataSourceTmcObservabilityCredential(),
 		},
 
 		// List of Resources supported by the provider
 		ResourcesMap: map[string]*schema.Resource{
-			"tmc_workspace":     resourceTmcWorkspace(),
-			"tmc_cluster_group": resourceTmcClusterGroup(),
-			"tmc_provisioner":   resourceTmcProvisioner(),
+			"tmc_workspace":                      resourceTmcWorkspace(),
+			"tmc_cluster_group":                  resourceTmcClusterGroup(),
+			"tmc_provisioner":                    resourceTmcProvisioner(),
+			"tmc_aws_data_protection_credential": resourceTmcAwsDataProtectionCredential(),
+			"tmc_aws_storage_credential":         resourceTmcAwsStorageCredential(),
+			"tmc_observability_credential":       resourceTmcObservabilityCredential(),
 		},
 	}
 

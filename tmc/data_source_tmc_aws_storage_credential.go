@@ -8,34 +8,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceTmcAwsDataProtectionCredential() *schema.Resource {
+func dataSourceTmcAwsStorageCredential() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTmcAwsDataProtectionCredentialRead,
+		ReadContext: dataSourceTmcAwsStorageCredentialRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Unique ID of the Tanzu Aws Data Protection Credential",
+				Description: "Unique ID of the Tanzu Aws Storage Credential",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the Tanzu Aws Data Protection Credential",
+				Description: "Name of the Tanzu Aws Storage Credential",
 			},
 			"capability": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Capability of the Tanzu Aws Data Protection Credential",
-			},
-			"iam_role_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "IAM Role Arn of the Tanzu Aws Data Protection Credential",
+				Description: "Capability of the Tanzu Aws Storage Credential",
 			},
 			"credential_provider": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Credential Provider of the Tanzu Aws Data Protection Credential",
+				Description: "Credential Provider of the Tanzu Aws Storage Credential",
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -45,7 +40,7 @@ func dataSourceTmcAwsDataProtectionCredential() *schema.Resource {
 	}
 }
 
-func dataSourceTmcAwsDataProtectionCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTmcAwsStorageCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*tanzuclient.Client)
 
 	// Warning or errors can be collected in a slice type
@@ -59,7 +54,6 @@ func dataSourceTmcAwsDataProtectionCredentialRead(ctx context.Context, d *schema
 	d.SetId(string(credential.Meta.UID))
 	d.Set("status", credential.Status.Phase)
 	d.Set("capability", credential.Spec.Capability)
-	d.Set("iam_role_arn", credential.Spec.Data.AwsCredential.IamRole.Arn)
 	d.Set("credential_provider", credential.Spec.MetaData.Provider)
 
 	return diags

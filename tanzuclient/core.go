@@ -15,7 +15,7 @@ type MetaData struct {
 	UID         string                 `json:"uid"`
 	Description string                 `json:"description"`
 	Labels      map[string]interface{} `json:"labels,omitempty"`
-	Annotations map[string]interface{} `json:"annotations,omitempty"`
+	Annotations map[string]string      `json:"annotations,omitempty"`
 }
 
 type errorResponse struct {
