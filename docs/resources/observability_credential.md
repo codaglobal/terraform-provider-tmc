@@ -1,7 +1,7 @@
 ---
 page_title: "TMC: tmc_observability_credential"
 layout: "tmc"
-subcategory: "Observability Credential"
+subcategory: "Tanzu Observability Credential"
 description: |-
   Creates and manages a Tanzu Mission Control (TMC) Observability Account Credential.
 ---

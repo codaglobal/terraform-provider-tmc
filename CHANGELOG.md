@@ -33,3 +33,8 @@ Enhancements:
 - Added `tmc_aws_data_protection_credential` resource and data source
 - Added `tmc_aws_storage_credential` resource and data source
 - Added `tmc_observability_credential` resource and data source
+
+## 0.2.1
+
+Enhancements:
+- Updated provider documentation
