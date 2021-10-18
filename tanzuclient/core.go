@@ -5,15 +5,17 @@ import (
 	"strings"
 )
 
+type FullName struct {
+	OrgID                 string `json:"orgId"`
+	Name                  string `json:"name"`
+	ManagementClusterName string `json:"managementClusterName"`
+}
+
 type MetaData struct {
 	UID         string                 `json:"uid"`
 	Description string                 `json:"description"`
 	Labels      map[string]interface{} `json:"labels,omitempty"`
-}
-
-type FullName struct {
-	OrgID string `json:"orgId"`
-	Name  string `json:"name"`
+	Annotations map[string]string      `json:"annotations,omitempty"`
 }
 
 type errorResponse struct {

@@ -15,35 +15,41 @@ func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"TMC_API_TOKEN",
-				}, nil),
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("TMC_API_TOKEN", nil),
+				Sensitive:   true,
 				Description: descriptions["api_token"],
 			},
 			"org_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					"TMC_ORG_URL",
-				}, nil),
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("TMC_ORG_URL", nil),
 				Description: descriptions["org_url"],
 			},
 		},
 
 		// List of Data sources supported by the provider
 		DataSourcesMap: map[string]*schema.Resource{
-			"tmc_workspace":      dataSourceTmcWorkspace(),
-			"tmc_workspaces":     dataSourceTmcWorkspaces(),
-			"tmc_cluster_group":  dataSourceClusterGroup(),
-			"tmc_cluster_groups": dataSourceClusterGroups(),
+			"tmc_workspace":                      dataSourceTmcWorkspace(),
+			"tmc_workspaces":                     dataSourceTmcWorkspaces(),
+			"tmc_cluster_group":                  dataSourceClusterGroup(),
+			"tmc_cluster_groups":                 dataSourceClusterGroups(),
+			"tmc_provisioners":                   dataSourceTmcProvisioners(),
+			"tmc_provisioner":                    dataSourceTmcProvisioner(),
+			"tmc_aws_data_protection_credential": dataSourceTmcAwsDataProtectionCredential(),
+			"tmc_aws_storage_credential":         dataSourceTmcAwsStorageCredential(),
+			"tmc_observability_credential":       dataSourceTmcObservabilityCredential(),
 		},
 
 		// List of Resources supported by the provider
 		ResourcesMap: map[string]*schema.Resource{
-			"tmc_workspace":     resourceTmcWorkspace(),
-			"tmc_cluster_group": resourceClusterGroup(),
+			"tmc_workspace":                      resourceTmcWorkspace(),
+			"tmc_cluster_group":                  resourceTmcClusterGroup(),
+			"tmc_provisioner":                    resourceTmcProvisioner(),
+			"tmc_aws_data_protection_credential": resourceTmcAwsDataProtectionCredential(),
+			"tmc_aws_storage_credential":         resourceTmcAwsStorageCredential(),
+			"tmc_observability_credential":       resourceTmcObservabilityCredential(),
 		},
 	}
 

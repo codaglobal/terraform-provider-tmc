@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceClusterGroup() *schema.Resource {
+func resourceTmcClusterGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterGroupCreate,
-		ReadContext:   resourceClusterGroupRead,
-		UpdateContext: resourceClusterGroupUpdate,
-		DeleteContext: resourceClusterGroupDelete,
+		CreateContext: resourceTmcClusterGroupCreate,
+		ReadContext:   resourceTmcClusterGroupRead,
+		UpdateContext: resourceTmcClusterGroupUpdate,
+		DeleteContext: resourceTmcClusterGroupDelete,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
@@ -38,17 +38,21 @@ func resourceClusterGroup() *schema.Resource {
 	}
 }
 
-func resourceClusterGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTmcClusterGroupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
 	client := m.(*tanzuclient.Client)
 
-	name := d.Get("name").(string)
+	clusterGroupName := d.Get("name").(string)
 	desc := d.Get("description").(string)
 	labels := d.Get("labels").(map[string]interface{})
 
-	clusterGroup, err := client.CreateClusterGroup(name, desc, labels)
+	if !IsValidTanzuName(clusterGroupName) {
+		return InvalidTanzuNameError("cluster group")
+	}
+
+	clusterGroup, err := client.CreateClusterGroup(clusterGroupName, desc, labels)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -60,20 +64,20 @@ func resourceClusterGroupCreate(ctx context.Context, d *schema.ResourceData, m i
 
 	d.SetId(clusterGroup.Meta.UID)
 
-	resourceClusterGroupRead(ctx, d, m)
+	resourceTmcClusterGroupRead(ctx, d, m)
 
 	return nil
 }
 
-func resourceClusterGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTmcClusterGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
 	client := m.(*tanzuclient.Client)
 
-	cgName := d.Get("name").(string)
+	clusterGroupName := d.Get("name").(string)
 
-	clusterGroup, err := client.GetClusterGroup(cgName)
+	clusterGroup, err := client.GetClusterGroup(clusterGroupName)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -87,7 +91,7 @@ func resourceClusterGroupRead(ctx context.Context, d *schema.ResourceData, m int
 	if err := d.Set("labels", clusterGroup.Meta.Labels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read workspace",
+			Summary:  "Failed to read ClusterGroup",
 			Detail:   fmt.Sprintf("Error setting labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -97,19 +101,19 @@ func resourceClusterGroupRead(ctx context.Context, d *schema.ResourceData, m int
 	return nil
 }
 
-func resourceClusterGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTmcClusterGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
 	client := m.(*tanzuclient.Client)
 
-	cgName := d.Get("name").(string)
+	clusterGroupName := d.Get("name").(string)
 
 	if d.HasChange("description") || d.HasChange("labels") {
 		desc := d.Get("description").(string)
 		labels := d.Get("labels").(map[string]interface{})
 
-		_, err := client.UpdateClusterGroup(cgName, desc, labels)
+		_, err := client.UpdateClusterGroup(clusterGroupName, desc, labels)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -122,10 +126,10 @@ func resourceClusterGroupUpdate(ctx context.Context, d *schema.ResourceData, m i
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
-	return resourceClusterGroupRead(ctx, d, m)
+	return resourceTmcClusterGroupRead(ctx, d, m)
 }
 
-func resourceClusterGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceTmcClusterGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
