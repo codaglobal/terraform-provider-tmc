@@ -1,7 +1,7 @@
 ---
 page_title: "TMC: tmc_cluster_group"
 layout: "tmc"
-subcategory: "Cluster Groups"
+subcategory: "Tanzu Cluster Groups"
 description: |-
   Get information on a list of Tanzu Mission Control (TMC) Cluster Group.
 ---

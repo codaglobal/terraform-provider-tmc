@@ -1,7 +1,7 @@
 ---
 page_title: "TMC: tmc_workspace"
 layout: "tmc"
-subcategory: "Workspaces"
+subcategory: "Tanzu Workspaces"
 description: |-
   Creates and manages a workspace in the TMC platform
 ---

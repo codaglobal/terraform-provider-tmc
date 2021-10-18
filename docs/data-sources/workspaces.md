@@ -1,7 +1,7 @@
 ---
 page_title: "TMC: tmc_workspaces"
 layout: "tmc"
-subcategory: "Workspaces"
+subcategory: "Tanzu Workspaces"
 description: |-
   Get information on a list of Tanzu Mission Control (TMC) Workspaces
 ---

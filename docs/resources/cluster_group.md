@@ -1,7 +1,7 @@
 ---
 page_title: "TMC: tmc_cluster_group"
 layout: "tmc"
-subcategory: "Cluster Groups"
+subcategory: "Tanzu Cluster Groups"
 description: |-
   Creates and manages a Cluster Group in the TMC platform
 ---
