@@ -63,63 +63,54 @@ func resourceCluster() *schema.Resource {
 				Description: "Name of the cluster group",
 			},
 			"labels": labelsSchema(),
-			"tkg_aws": {
-				Type:        schema.TypeList,
+			"region": {
+				Type:        schema.TypeString,
+				Description: "Region of the AWS Cluster",
 				Required:    true,
-				ForceNew:    true,
-				Description: "Details of Cluster hosted on AWS",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:        schema.TypeString,
-							Description: "Region of the AWS Cluster",
-							Required:    true,
-						},
-						"version": {
-							Type:        schema.TypeString,
-							Description: "Kubernetes version to be used",
-							Required:    true,
-						},
-						"credential_name": {
-							Type:        schema.TypeString,
-							Description: "Kubernetes version of the AWS Cluster",
-							Required:    true,
-						},
-						"availability_zones": {
-							Type:        schema.TypeList,
-							Description: "Availability zones of the control plane node",
-							Required:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-						},
-						"instance_type": {
-							Type:        schema.TypeString,
-							Description: "Instance type used to deploy the control plane node",
-							Required:    true,
-						},
-						"vpc_cidrblock": {
-							Type:        schema.TypeString,
-							Description: "CIDR block used by the Cluster's VPC",
-							Required:    true,
-						},
-						"pod_cidrblock": {
-							Type:        schema.TypeString,
-							Description: "CIDR block used by the Cluster's Pods",
-							Optional:    true,
-							Default:     "192.168.0.0/16",
-						},
-						"service_cidrblock": {
-							Type:        schema.TypeString,
-							Description: "CIDR block used by the Cluster's Services",
-							Optional:    true,
-							Default:     "10.96.0.0/12",
-						},
-						"ssh_key": {
-							Type:        schema.TypeString,
-							Description: "Name of the SSH Keypair used in the AWS Cluster",
-							Required:    true,
-						},
-					},
-				},
+			},
+			"version": {
+				Type:        schema.TypeString,
+				Description: "Kubernetes version to be used",
+				Required:    true,
+			},
+			"credential_name": {
+				Type:        schema.TypeString,
+				Description: "Kubernetes version of the AWS Cluster",
+				Required:    true,
+			},
+			"availability_zones": {
+				Type:        schema.TypeList,
+				Description: "Availability zones of the control plane node",
+				Required:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				MaxItems:    1,
+			},
+			"instance_type": {
+				Type:        schema.TypeString,
+				Description: "Instance type used to deploy the control plane node",
+				Required:    true,
+			},
+			"vpc_cidrblock": {
+				Type:        schema.TypeString,
+				Description: "CIDR block used by the Cluster's VPC",
+				Required:    true,
+			},
+			"pod_cidrblock": {
+				Type:        schema.TypeString,
+				Description: "CIDR block used by the Cluster's Pods",
+				Optional:    true,
+				Default:     "192.168.0.0/16",
+			},
+			"service_cidrblock": {
+				Type:        schema.TypeString,
+				Description: "CIDR block used by the Cluster's Services",
+				Optional:    true,
+				Default:     "10.96.0.0/12",
+			},
+			"ssh_key": {
+				Type:        schema.TypeString,
+				Description: "Name of the SSH Keypair used in the AWS Cluster",
+				Required:    true,
 			},
 		},
 	}
@@ -137,9 +128,29 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	description := d.Get("description").(string)
 	labels := d.Get("labels").(map[string]interface{})
 	cluster_group := d.Get("cluster_group").(string)
-	tkg_aws := d.Get("tkg_aws").([]interface{})
+	availability_zones := d.Get("availability_zones").([]interface{})
+	region := d.Get("region").(string)
+	version := d.Get("version").(string)
+	credential_name := d.Get("credential_name").(string)
+	instance_type := d.Get("instance_type").(string)
+	vpc_cidrblock := d.Get("vpc_cidrblock").(string)
+	ssh_key := d.Get("ssh_key").(string)
+	pod_cidrblock := d.Get("pod_cidrblock").(string)
+	service_cidrblock := d.Get("service_cidrblock").(string)
 
-	cluster, err := client.CreateCluster(clusterName, managementClusterName, provisionerName, cluster_group, description, labels, tkg_aws[0].(map[string]interface{}))
+	opts := &tanzuclient.ClusterOpts{
+		Region:            region,
+		Version:           version,
+		CredentialName:    credential_name,
+		InstanceType:      instance_type,
+		VpcCidrBlock:      vpc_cidrblock,
+		PodCidrBlock:      pod_cidrblock,
+		ServiceCidrBlock:  service_cidrblock,
+		SshKey:            ssh_key,
+		AvailabilityZones: []string{availability_zones[0].(string)},
+	}
+
+	cluster, err := client.CreateCluster(clusterName, managementClusterName, provisionerName, cluster_group, description, labels, opts)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -183,20 +194,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diags
 	}
 
-	tkgAws := make([]interface{}, 0)
-
-	awsData := flattenAwsData(cluster)
-
-	tkgAws = append(tkgAws, awsData)
-
-	if err := d.Set("tkg_aws", tkgAws); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to read cluster",
-			Detail:   fmt.Sprintf("Error setting spec for resource %s: %s", d.Get("name"), err),
-		})
-		return diags
-	}
+	d.Set("availability_zones", cluster.Spec.TkgAws.Topology.ControlPlane.AvailabilityZones)
+	d.Set("instance_type", cluster.Spec.TkgAws.Topology.ControlPlane.InstanceType)
+	d.Set("vpc_cidrblock", cluster.Spec.TkgAws.Settings.Network.Provider.Vpc.CidrBlock)
+	d.Set("region", cluster.Spec.TkgAws.Distribution.Region)
+	d.Set("credential_name", cluster.Spec.TkgAws.Distribution.ProvisionerCredentialName)
+	d.Set("version", cluster.Spec.TkgAws.Distribution.Version)
+	d.Set("ssh_key", cluster.Spec.TkgAws.Settings.Security.SshKey)
+	d.Set("pod_cidrblock", cluster.Spec.TkgAws.Settings.Network.ClusterNetwork.Pods[0].CidrBlocks)
+	d.Set("service_cidrblock", cluster.Spec.TkgAws.Settings.Network.ClusterNetwork.Services[0].CidrBlocks)
 
 	return diags
 }
@@ -212,11 +218,31 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	description := d.Get("description").(string)
 	labels := d.Get("labels").(map[string]interface{})
 	cluster_group := d.Get("cluster_group").(string)
-	tkg_aws := d.Get("tkg_aws").([]interface{})
 	resourceVersion := d.Get("resource_version").(string)
+	availability_zones := d.Get("availability_zones").([]interface{})
+	region := d.Get("region").(string)
+	version := d.Get("version").(string)
+	credential_name := d.Get("credential_name").(string)
+	instance_type := d.Get("instance_type").(string)
+	vpc_cidrblock := d.Get("vpc_cidrblock").(string)
+	ssh_key := d.Get("ssh_key").(string)
+	pod_cidrblock := d.Get("pod_cidrblock").(string)
+	service_cidrblock := d.Get("service_cidrblock").(string)
+
+	opts := &tanzuclient.ClusterOpts{
+		Region:            region,
+		Version:           version,
+		CredentialName:    credential_name,
+		InstanceType:      instance_type,
+		VpcCidrBlock:      vpc_cidrblock,
+		PodCidrBlock:      pod_cidrblock,
+		ServiceCidrBlock:  service_cidrblock,
+		SshKey:            ssh_key,
+		AvailabilityZones: []string{availability_zones[0].(string)},
+	}
 
 	if d.HasChange("labels") || d.HasChange("cluster_group") {
-		_, err := client.UpdateCluster(clusterName, managementClusterName, provisionerName, cluster_group, description, resourceVersion, labels, tkg_aws[0].(map[string]interface{}))
+		_, err := client.UpdateCluster(clusterName, managementClusterName, provisionerName, cluster_group, description, resourceVersion, labels, opts)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,

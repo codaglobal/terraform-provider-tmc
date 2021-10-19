@@ -11,7 +11,9 @@ func labelsSchema() *schema.Schema {
 		Type:     schema.TypeMap,
 		Optional: true,
 		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			return k == "labels.tmc.cloud.vmware.com/creator"
+			// Ignore changes to the creator label added automatically added by TMC and
+			// also ignore changes when the labels field itself is deleted when updating
+			return k == "labels.tmc.cloud.vmware.com/creator" || k == "labels.%"
 		},
 	}
 }
