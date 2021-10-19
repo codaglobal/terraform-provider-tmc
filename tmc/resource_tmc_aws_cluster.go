@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceCluster() *schema.Resource {
+func resourceAwsCluster() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCreate,
-		ReadContext:   resourceClusterRead,
-		UpdateContext: resourceClusterUpdate,
-		DeleteContext: resourceClusterDelete,
+		CreateContext: resourceAwsClusterCreate,
+		ReadContext:   resourceAwsClusterRead,
+		UpdateContext: resourceAwsClusterUpdate,
+		DeleteContext: resourceAwsClusterDelete,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
@@ -116,7 +116,7 @@ func resourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
@@ -129,24 +129,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	labels := d.Get("labels").(map[string]interface{})
 	cluster_group := d.Get("cluster_group").(string)
 	availability_zones := d.Get("availability_zones").([]interface{})
-	region := d.Get("region").(string)
-	version := d.Get("version").(string)
-	credential_name := d.Get("credential_name").(string)
-	instance_type := d.Get("instance_type").(string)
-	vpc_cidrblock := d.Get("vpc_cidrblock").(string)
-	ssh_key := d.Get("ssh_key").(string)
-	pod_cidrblock := d.Get("pod_cidrblock").(string)
-	service_cidrblock := d.Get("service_cidrblock").(string)
 
 	opts := &tanzuclient.ClusterOpts{
-		Region:            region,
-		Version:           version,
-		CredentialName:    credential_name,
-		InstanceType:      instance_type,
-		VpcCidrBlock:      vpc_cidrblock,
-		PodCidrBlock:      pod_cidrblock,
-		ServiceCidrBlock:  service_cidrblock,
-		SshKey:            ssh_key,
+		Region:            d.Get("region").(string),
+		Version:           d.Get("version").(string),
+		CredentialName:    d.Get("credential_name").(string),
+		InstanceType:      d.Get("instance_type").(string),
+		VpcCidrBlock:      d.Get("vpc_cidrblock").(string),
+		PodCidrBlock:      d.Get("pod_cidrblock").(string),
+		ServiceCidrBlock:  d.Get("service_cidrblock").(string),
+		SshKey:            d.Get("ssh_key").(string),
 		AvailabilityZones: []string{availability_zones[0].(string)},
 	}
 
@@ -162,12 +154,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	d.SetId(cluster.Meta.UID)
 
-	resourceClusterRead(ctx, d, m)
+	resourceAwsClusterRead(ctx, d, m)
 
 	return diags
 }
 
-func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*tanzuclient.Client)
@@ -207,7 +199,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	return diags
 }
 
-func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*tanzuclient.Client)
@@ -220,24 +212,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	cluster_group := d.Get("cluster_group").(string)
 	resourceVersion := d.Get("resource_version").(string)
 	availability_zones := d.Get("availability_zones").([]interface{})
-	region := d.Get("region").(string)
-	version := d.Get("version").(string)
-	credential_name := d.Get("credential_name").(string)
-	instance_type := d.Get("instance_type").(string)
-	vpc_cidrblock := d.Get("vpc_cidrblock").(string)
-	ssh_key := d.Get("ssh_key").(string)
-	pod_cidrblock := d.Get("pod_cidrblock").(string)
-	service_cidrblock := d.Get("service_cidrblock").(string)
 
 	opts := &tanzuclient.ClusterOpts{
-		Region:            region,
-		Version:           version,
-		CredentialName:    credential_name,
-		InstanceType:      instance_type,
-		VpcCidrBlock:      vpc_cidrblock,
-		PodCidrBlock:      pod_cidrblock,
-		ServiceCidrBlock:  service_cidrblock,
-		SshKey:            ssh_key,
+		Region:            d.Get("region").(string),
+		Version:           d.Get("version").(string),
+		CredentialName:    d.Get("credential_name").(string),
+		InstanceType:      d.Get("instance_type").(string),
+		VpcCidrBlock:      d.Get("vpc_cidrblock").(string),
+		PodCidrBlock:      d.Get("pod_cidrblock").(string),
+		ServiceCidrBlock:  d.Get("service_cidrblock").(string),
+		SshKey:            d.Get("ssh_key").(string),
 		AvailabilityZones: []string{availability_zones[0].(string)},
 	}
 
@@ -255,11 +239,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
-	return resourceClusterRead(ctx, d, m)
+	return resourceAwsClusterRead(ctx, d, m)
 
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*tanzuclient.Client)
