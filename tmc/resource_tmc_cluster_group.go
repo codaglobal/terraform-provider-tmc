@@ -27,6 +27,13 @@ func resourceTmcClusterGroup() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Unique Name of the Tanzu Cluster Group in your Org",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if !IsValidTanzuName(v) {
+						errs = append(errs, fmt.Errorf("name should contain only lowercase letters, numbers or hyphens and should begin with either an alphabet or number"))
+					}
+					return
+				},
 			},
 			"description": {
 				Type:        schema.TypeString,

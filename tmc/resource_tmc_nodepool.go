@@ -27,6 +27,13 @@ func resourceNodePool() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Name of the Nodepool in the cluster",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if !IsValidTanzuName(v) {
+						errs = append(errs, fmt.Errorf("name should contain only lowercase letters, numbers or hyphens and should begin with either an alphabet or number"))
+					}
+					return
+				},
 			},
 			"cluster_name": {
 				Type:        schema.TypeString,
