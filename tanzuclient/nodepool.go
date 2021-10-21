@@ -38,11 +38,9 @@ type NodePoolJsonObject struct {
 	NodePool NodePool `json:"nodepool"`
 }
 
-func (c *Client) CreateNodePool(name string, managementClusterName string, provisionerName string, clusterName string, description string, cloudLabels map[string]interface{}, nodeLabels map[string]interface{}, nodeCount int, spec map[string]interface{}) (*NodePool, error) {
+func (c *Client) CreateNodePool(name string, managementClusterName string, provisionerName string, clusterName string, description string, cloudLabels map[string]interface{}, nodeLabels map[string]interface{}, nodeCount int, opts *AwsNodeSpec) (*NodePool, error) {
 
 	requestURL := fmt.Sprintf("%s/v1alpha1/clusters/%s/nodepools", c.baseURL, clusterName)
-
-	awsNodeSpec := buildAwsNodeSpec(spec)
 
 	newNodePool := &NodePool{
 		FullName: &NodeName{
@@ -58,7 +56,7 @@ func (c *Client) CreateNodePool(name string, managementClusterName string, provi
 			NodeLabels:      nodeLabels,
 			CloudLabels:     cloudLabels,
 			WorkerNodeCount: fmt.Sprint(nodeCount),
-			NodeTkgAws:      awsNodeSpec,
+			NodeTkgAws:      *opts,
 		},
 	}
 
@@ -103,10 +101,8 @@ func (c *Client) GetNodePool(name string, clusterName string, managementClusterN
 	return &res.NodePool, nil
 }
 
-func (c *Client) UpdateNodePool(name string, managementClusterName string, provisionerName string, clusterName string, description string, cloudLabels map[string]interface{}, nodeLabels map[string]interface{}, nodeCount int, spec map[string]interface{}) (*NodePool, error) {
+func (c *Client) UpdateNodePool(name string, managementClusterName string, provisionerName string, clusterName string, description string, cloudLabels map[string]interface{}, nodeLabels map[string]interface{}, nodeCount int, opts *AwsNodeSpec) (*NodePool, error) {
 	requestURL := fmt.Sprintf("%s/v1alpha1/clusters/%s/nodepools/%s", c.baseURL, clusterName, name)
-
-	awsNodeSpec := buildAwsNodeSpec(spec)
 
 	newNodePool := &NodePool{
 		FullName: &NodeName{
@@ -122,7 +118,7 @@ func (c *Client) UpdateNodePool(name string, managementClusterName string, provi
 			NodeLabels:      nodeLabels,
 			CloudLabels:     cloudLabels,
 			WorkerNodeCount: fmt.Sprint(nodeCount),
-			NodeTkgAws:      awsNodeSpec,
+			NodeTkgAws:      *opts,
 		},
 	}
 
@@ -164,14 +160,4 @@ func (c *Client) DeleteNodePool(name string, clusterName string, managementClust
 	}
 
 	return nil
-}
-
-func buildAwsNodeSpec(spec map[string]interface{}) AwsNodeSpec {
-	var newAwsNodeSpec AwsNodeSpec
-
-	newAwsNodeSpec.AvailabilityZone = spec["availability_zone"].(string)
-	newAwsNodeSpec.InstanceType = spec["instance_type"].(string)
-	newAwsNodeSpec.Version = spec["version"].(string)
-
-	return newAwsNodeSpec
 }

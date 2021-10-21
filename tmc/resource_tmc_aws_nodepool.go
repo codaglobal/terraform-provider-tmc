@@ -3,6 +3,7 @@ package tmc
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/codaglobal/terraform-provider-tmc/tanzuclient"
@@ -10,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceNodePool() *schema.Resource {
+func resourceAwsNodePool() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNodePoolCreate,
-		ReadContext:   resourceNodePoolRead,
-		UpdateContext: resourceNodePoolUpdate,
-		DeleteContext: resourceNodePoolDelete,
+		CreateContext: resourceAwsNodePoolCreate,
+		ReadContext:   resourceAwsNodePoolRead,
+		UpdateContext: resourceAwsNodePoolUpdate,
+		DeleteContext: resourceAwsNodePoolDelete,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
@@ -66,35 +67,26 @@ func resourceNodePool() *schema.Resource {
 				Required:    true,
 				Description: "Number of worker nodes in the nodepool",
 			},
-			"tkg_aws": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zone": {
-							Type:        schema.TypeString,
-							Description: "Availability zone of the worker node",
-							Required:    true,
-						},
-						"instance_type": {
-							Type:        schema.TypeString,
-							Description: "Instance type used to deploy the worker node",
-							Required:    true,
-						},
-						"version": {
-							Type:        schema.TypeString,
-							Description: "Kubernetes version to be used",
-							Required:    true,
-						},
-					},
-				},
+			"availability_zone": {
+				Type:        schema.TypeString,
+				Description: "Availability zone of the worker node",
+				Required:    true,
+			},
+			"instance_type": {
+				Type:        schema.TypeString,
+				Description: "Instance type used to deploy the worker node",
+				Required:    true,
+			},
+			"version": {
+				Type:        schema.TypeString,
+				Description: "Kubernetes version to be used",
+				Required:    true,
 			},
 		},
 	}
 }
 
-func resourceNodePoolCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsNodePoolCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 	client := m.(*tanzuclient.Client)
@@ -107,9 +99,14 @@ func resourceNodePoolCreate(ctx context.Context, d *schema.ResourceData, m inter
 	node_labels := d.Get("node_labels").(map[string]interface{})
 	cluster_name := d.Get("cluster_name").(string)
 	worker_node_count := d.Get("worker_node_count").(int)
-	tkg_aws := d.Get("tkg_aws").([]interface{})
 
-	nodepool, err := client.CreateNodePool(npName, managementClusterName, provisionerName, cluster_name, description, cloud_labels, node_labels, worker_node_count, tkg_aws[0].(map[string]interface{}))
+	awsNodeSpec := &tanzuclient.AwsNodeSpec{
+		AvailabilityZone: d.Get("availability_zone").(string),
+		Version:          d.Get("version").(string),
+		InstanceType:     d.Get("instance_type").(string),
+	}
+
+	nodepool, err := client.CreateNodePool(npName, managementClusterName, provisionerName, cluster_name, description, cloud_labels, node_labels, worker_node_count, awsNodeSpec)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -121,12 +118,12 @@ func resourceNodePoolCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	d.SetId(nodepool.Meta.UID)
 
-	resourceNodePoolRead(ctx, d, m)
+	resourceAwsNodePoolRead(ctx, d, m)
 
 	return diags
 }
 
-func resourceNodePoolRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
@@ -142,8 +139,10 @@ func resourceNodePoolRead(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 
+	nodeCount, _ := strconv.Atoi(nodepool.Spec.WorkerNodeCount)
+
 	d.Set("description", nodepool.Meta.Description)
-	d.Set("worker_node_count", nodepool.Spec.WorkerNodeCount)
+	d.Set("worker_node_count", nodeCount)
 
 	if err := d.Set("cloud_labels", nodepool.Spec.CloudLabels); err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -162,25 +161,14 @@ func resourceNodePoolRead(ctx context.Context, d *schema.ResourceData, m interfa
 		return diags
 	}
 
-	tkgAws := make([]interface{}, 0)
-
-	awsNodeSpec := flattenAwsNodeSpec(&nodepool.Spec.NodeTkgAws)
-
-	tkgAws = append(tkgAws, awsNodeSpec)
-
-	if err := d.Set("tkg_aws", tkgAws); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to read cluster",
-			Detail:   fmt.Sprintf("Error setting spec for resource %s: %s", d.Get("name"), err),
-		})
-		return diags
-	}
+	d.Set("availability_zone", nodepool.Spec.NodeTkgAws.AvailabilityZone)
+	d.Set("instance_type", nodepool.Spec.NodeTkgAws.InstanceType)
+	d.Set("version", nodepool.Spec.NodeTkgAws.Version)
 
 	return diags
 }
 
-func resourceNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 	client := m.(*tanzuclient.Client)
@@ -193,10 +181,15 @@ func resourceNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m inter
 	node_labels := d.Get("node_labels").(map[string]interface{})
 	cluster_name := d.Get("cluster_name").(string)
 	worker_node_count := d.Get("worker_node_count").(int)
-	tkg_aws := d.Get("tkg_aws").([]interface{})
+
+	awsNodeSpec := &tanzuclient.AwsNodeSpec{
+		AvailabilityZone: d.Get("availability_zone").(string),
+		Version:          d.Get("version").(string),
+		InstanceType:     d.Get("instance_type").(string),
+	}
 
 	if d.HasChange("worker_node_count") {
-		_, err := client.UpdateNodePool(npName, managementClusterName, provisionerName, cluster_name, description, cloud_labels, node_labels, worker_node_count, tkg_aws[0].(map[string]interface{}))
+		_, err := client.UpdateNodePool(npName, managementClusterName, provisionerName, cluster_name, description, cloud_labels, node_labels, worker_node_count, awsNodeSpec)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
@@ -209,10 +202,10 @@ func resourceNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m inter
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
-	return resourceNodePoolRead(ctx, d, m)
+	return resourceAwsNodePoolRead(ctx, d, m)
 }
 
-func resourceNodePoolDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceAwsNodePoolDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 

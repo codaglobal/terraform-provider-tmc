@@ -32,7 +32,7 @@ func Provider() *schema.Provider {
 		// List of Data sources supported by the provider
 		DataSourcesMap: map[string]*schema.Resource{
 			"tmc_aws_cluster":                    dataSourceAwsCluster(),
-			"tmc_nodepool":                       dataSourceNodePool(),
+			"tmc_aws_nodepool":                   dataSourceAwsNodePool(),
 			"tmc_workspace":                      dataSourceTmcWorkspace(),
 			"tmc_workspaces":                     dataSourceTmcWorkspaces(),
 			"tmc_cluster_group":                  dataSourceClusterGroup(),
@@ -47,7 +47,7 @@ func Provider() *schema.Provider {
 		// List of Resources supported by the provider
 		ResourcesMap: map[string]*schema.Resource{
 			"tmc_aws_cluster":                    resourceAwsCluster(),
-			"tmc_nodepool":                       resourceNodePool(),
+			"tmc_aws_nodepool":                   resourceAwsNodePool(),
 			"tmc_workspace":                      resourceTmcWorkspace(),
 			"tmc_cluster_group":                  resourceTmcClusterGroup(),
 			"tmc_provisioner":                    resourceTmcProvisioner(),

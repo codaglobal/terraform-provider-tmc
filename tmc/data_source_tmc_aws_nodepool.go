@@ -3,15 +3,16 @@ package tmc
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/codaglobal/terraform-provider-tmc/tanzuclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceNodePool() *schema.Resource {
+func dataSourceAwsNodePool() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNodePoolRead,
+		ReadContext: dataSourceAwsNodePoolRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
@@ -50,34 +51,26 @@ func dataSourceNodePool() *schema.Resource {
 				Computed:    true,
 				Description: "Number of worker nodes in the nodepool",
 			},
-			"tkg_aws": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zone": {
-							Type:        schema.TypeString,
-							Description: "Availability zone of the worker node",
-							Computed:    true,
-						},
-						"instance_type": {
-							Type:        schema.TypeString,
-							Description: "Instance type used to deploy the worker node",
-							Computed:    true,
-						},
-						"version": {
-							Type:        schema.TypeString,
-							Description: "Kubernetes version to be used",
-							Computed:    true,
-						},
-					},
-				},
+			"availability_zone": {
+				Type:        schema.TypeString,
+				Description: "Availability zone of the worker node",
+				Computed:    true,
+			},
+			"instance_type": {
+				Type:        schema.TypeString,
+				Description: "Instance type used to deploy the worker node",
+				Computed:    true,
+			},
+			"version": {
+				Type:        schema.TypeString,
+				Description: "Kubernetes version to be used",
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func dataSourceNodePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*tanzuclient.Client)
 	var diags diag.Diagnostics
 
@@ -91,8 +84,10 @@ func dataSourceNodePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
+	nodeCount, _ := strconv.Atoi(nodepool.Spec.WorkerNodeCount)
+
 	d.Set("description", nodepool.Meta.Description)
-	d.Set("worker_node_count", nodepool.Spec.WorkerNodeCount)
+	d.Set("worker_node_count", nodeCount)
 
 	if err := d.Set("cloud_labels", nodepool.Spec.CloudLabels); err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -111,32 +106,11 @@ func dataSourceNodePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 
-	tkgAws := make([]interface{}, 0)
-
-	awsNodeSpec := flattenAwsNodeSpec(&nodepool.Spec.NodeTkgAws)
-
-	tkgAws = append(tkgAws, awsNodeSpec)
-
-	if err := d.Set("tkg_aws", tkgAws); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to read cluster",
-			Detail:   fmt.Sprintf("Error getting spec for resource %s: %s", d.Get("name"), err),
-		})
-		return diags
-	}
+	d.Set("availability_zone", nodepool.Spec.NodeTkgAws.AvailabilityZone)
+	d.Set("instance_type", nodepool.Spec.NodeTkgAws.InstanceType)
+	d.Set("version", nodepool.Spec.NodeTkgAws.Version)
 
 	d.SetId(nodepool.Meta.UID)
 
 	return diags
-}
-
-func flattenAwsNodeSpec(data *tanzuclient.AwsNodeSpec) map[string]interface{} {
-	aws := make(map[string]interface{})
-
-	aws["availability_zone"] = data.AvailabilityZone
-	aws["instance_type"] = data.InstanceType
-	aws["version"] = data.Version
-
-	return aws
 }
