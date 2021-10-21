@@ -1,17 +1,17 @@
 ---
-page_title: "TMC: tmc_cluster"
+page_title: "TMC: tmc_aws_cluster"
 layout: "tmc"
-subcategory: "Cluster"
+subcategory: "TKG Cluster"
 description: |-
-  Get information on a specific cluster in Tanzu Mission Control (TMC)
+  Get information on a specific cluster created using AWS in Tanzu Mission Control (TMC)
 ---
 
 # Data Source: tmc_cluster
 
-The TMC Cluster data resource can be used to get the information of a cluster in Tanzu Mission Control (TMC). 
+The TMC Cluster data resource can be used to get the information of any AWS cluster in Tanzu Mission Control (TMC). 
 
 ```terraform
-resource "tmc_cluster" "example" {
+resource "tmc_aws_cluster" "example" {
   name               = "example-cluster"
   cluster_group      = "example"
   management_cluster = "example-aws-hosted"
@@ -33,14 +33,6 @@ The following arguments are supported:
 * `id` - The UID of the Tanzu Cluster.
 * `description` - The description of the Tanzu Cluster.
 * `labels` - A map of labels to assign to the resource.
-* [`tkg-aws`](#tkg-aws) - Contains information for provisioning a cluster using AWS.
-
-## Nested Blocks
-
-#### `tkg-aws`
-
-#### Attributes
-
 * `availability_zones` - A list of availability zones for the cluster's control plane
 * `instance_type` - Instance type of the EC2 nodes to be used as part of the control plane.
 * `vpc_cidrblock` - CIDR block of the AWS VPC to be used for the control plane.

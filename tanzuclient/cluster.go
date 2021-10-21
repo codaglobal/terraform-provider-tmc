@@ -7,18 +7,6 @@ import (
 	"net/http"
 )
 
-type ClusterOpts struct {
-	Region            string
-	Version           string
-	CredentialName    string
-	AvailabilityZones []string
-	InstanceType      string
-	VpcCidrBlock      string
-	PodCidrBlock      string
-	ServiceCidrBlock  string
-	SshKey            string
-}
-
 type Network struct {
 	ClusterNetwork struct {
 		Pods []struct {
@@ -87,6 +75,20 @@ type Cluster struct {
 
 type ClusterJSONObject struct {
 	Cluster Cluster `json:"cluster"`
+}
+
+// Options interface for passing arguments to the
+// functions neccessary to perform on the Cluster
+type ClusterOpts struct {
+	Region            string
+	Version           string
+	CredentialName    string
+	AvailabilityZones []string
+	InstanceType      string
+	VpcCidrBlock      string
+	PodCidrBlock      string
+	ServiceCidrBlock  string
+	SshKey            string
 }
 
 func (c *Client) GetCluster(fullName string, managementClusterName string, provisionerName string) (*Cluster, error) {

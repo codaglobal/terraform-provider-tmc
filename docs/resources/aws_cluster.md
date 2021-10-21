@@ -1,14 +1,14 @@
 ---
-page_title: "TMC: tmc_cluster"
+page_title: "TMC: tmc_aws_cluster"
 layout: "tmc"
-subcategory: "Cluster"
+subcategory: "TKG Cluster"
 description: |-
-  Creates and manages a Cluster in the TMC platform
+  Creates and manages a Cluster using AWS in the TMC platform
 ---
 
 # Resource: tmc_cluster
 
-The TMC Cluster resource allows requesting the creation of a cluster in Tanzu Mission Control (TMC). It also deals with managing the attributes and lifecycle of the cluster.
+The TMC Cluster resource allows requesting the creation of a AWS cluster in Tanzu Mission Control (TMC). It also deals with managing the attributes and lifecycle of the cluster.
 
 ```terraform
 resource "tmc_cluster" "example" {
@@ -41,14 +41,6 @@ The following arguments are supported:
 * `cluster_group` - (Required) A map of labels to assign to the resource.
 * `management_cluster` - (Required) Name of the management cluster used to provision the cluster.
 * `provisioner_name` - (Required) Name of the provisioner to be used.
-* [`tkg-aws`](#tkg-aws) - (Required) Contains information for provisioning a cluster using AWS.
-
-## Nested Blocks
-
-#### `tkg-aws`
-
-#### Arguments
-
 * `availability_zones` - (Required) A list of availability zones for the cluster's control plane
 
 !> **Note**: The availability zones specified for the cluster must have atleast one private and one public

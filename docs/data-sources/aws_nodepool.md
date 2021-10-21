@@ -1,14 +1,14 @@
 ---
 page_title: "TMC: tmc_nodepool"
 layout: "tmc"
-subcategory: "Nodepool"
+subcategory: "TKG Cluster"
 description: |-
-  Get information on a specific nodepool of a cluster in Tanzu Mission Control (TMC)
+  Get information on a specific nodepool of a AWS cluster in Tanzu Mission Control (TMC)
 ---
 
 # Data Source: tmc_cluster
 
-The TMC Nodepool data resource can be used to get the information of a nodepool for a cluster in Tanzu Mission Control (TMC). 
+The TMC Nodepool data resource can be used to get the information of a nodepool for a AWS cluster in Tanzu Mission Control (TMC). 
 
 ```terraform
 data "tmc_nodepool" "example" {
@@ -34,15 +34,6 @@ The following arguments are supported:
 * `description` - (Optional) The description of the nodepool.
 * `node_labels` - (Optional) A map of node labels to assign to the resource.
 * `cloud_labels` - (Optional) A map of cloud labels to assign to the resource.
-* [`tkg-aws`](#tkg-aws) - (Required) Contains information for provisioning a nodepool in AWS.
-
-
-## Nested Blocks
-
-#### `tkg-aws`
-
-#### Attributes
-
 * `availability_zone` - The AWS availability zone for the cluster's worker nodes.
 * `instance_type` - Instance type of the EC2 nodes to be used as part of the nodepool.
 * `version` - Version of Kubernetes to be used in the cluster.

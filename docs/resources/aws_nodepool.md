@@ -1,14 +1,14 @@
 ---
 page_title: "TMC: tmc_nodepool"
 layout: "tmc"
-subcategory: "Nodepool"
+subcategory: "TKG Cluster"
 description: |-
-  Creates and manages a nodepool for a cluster in the TMC platform
+  Creates and manages a nodepool for a AWS cluster in the TMC platform
 ---
 
 # Resource: tmc_cluster
 
-The TMC Cluster resource allows requesting the creation of a nodepool for a cluster in Tanzu Mission Control (TMC). 
+The TMC Cluster resource allows requesting the creation of a nodepool for a AWS cluster in Tanzu Mission Control (TMC). 
 
 ```terraform
 resource "tmc_nodepool" "example" {
@@ -36,14 +36,6 @@ The following arguments are supported:
 * `cluster_name` - (Required) The name of the Tanzu Cluster for which the nodepool is to be created.
 * `management_cluster` - (Required) Name of the management cluster used to provision the cluster.
 * `provisioner_name` - (Required) Name of the provisioner to be used.
-* [`tkg-aws`](#tkg-aws) - (Required) Contains information for provisioning a nodepool in AWS.
-
-## Nested Blocks
-
-#### `tkg-aws`
-
-#### Arguments
-
 * `availability_zone` - (Required) The AWS availability zone for the cluster's worker nodes.
 * `instance_type` - (Required) Instance type of the EC2 nodes to be used as part of the nodepool.
 * `version` - (Required) Version of Kubernetes to be used in the cluster.
