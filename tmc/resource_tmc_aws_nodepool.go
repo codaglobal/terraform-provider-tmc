@@ -110,8 +110,8 @@ func resourceAwsNodePoolCreate(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Create Nodepool Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to create AWS nodepool",
+			Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}
@@ -136,7 +136,12 @@ func resourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	nodepool, err := client.GetNodePool(npName, cluster_name, managementClusterName, provisionerName)
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to read AWS nodepool",
+			Detail:   fmt.Sprintf("Error reading resource %s: %s", d.Get("name"), err),
+		})
+		return diags
 	}
 
 	nodeCount, _ := strconv.Atoi(nodepool.Spec.WorkerNodeCount)
@@ -147,7 +152,7 @@ func resourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, m inte
 	if err := d.Set("cloud_labels", nodepool.Spec.CloudLabels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read Nodepool",
+			Summary:  "Failed to read AWS nodepool",
 			Detail:   fmt.Sprintf("Error getting cloud labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -155,7 +160,7 @@ func resourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, m inte
 	if err := d.Set("node_labels", nodepool.Spec.NodeLabels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read Nodepool",
+			Summary:  "Failed to read AWS nodepool",
 			Detail:   fmt.Sprintf("Error getting node labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -193,8 +198,8 @@ func resourceAwsNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m in
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Update Nodepool Failed",
-				Detail:   err.Error(),
+				Summary:  "Failed to update AWS nodepool",
+				Detail:   fmt.Sprintf("Error updating resource %s: %s", d.Get("name"), err),
 			})
 			return diags
 		}
@@ -220,8 +225,8 @@ func resourceAwsNodePoolDelete(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Delete Cluster Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to delete AWS nodepool",
+			Detail:   fmt.Sprintf("Error deleting resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}

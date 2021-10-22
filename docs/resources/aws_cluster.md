@@ -11,7 +11,7 @@ description: |-
 The TMC Cluster resource allows requesting the creation of a AWS cluster in Tanzu Mission Control (TMC). It also deals with managing the attributes and lifecycle of the cluster.
 
 ```terraform
-resource "tmc_cluster" "example" {
+resource "tmc_aws_cluster" "example" {
   name               = "example-cluster"
   cluster_group      = "example"
   management_cluster = "example-aws-hosted"

@@ -81,7 +81,12 @@ func dataSourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, meta
 
 	nodepool, err := client.GetNodePool(npName, cluster_name, managementClusterName, provisionerName)
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to read nodepool",
+			Detail:   fmt.Sprintf("Error reading resource %s: %s", d.Get("name"), err),
+		})
+		return diags
 	}
 
 	nodeCount, _ := strconv.Atoi(nodepool.Spec.WorkerNodeCount)
@@ -92,7 +97,7 @@ func dataSourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("cloud_labels", nodepool.Spec.CloudLabels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read Nodepool",
+			Summary:  "Failed to read nodepool",
 			Detail:   fmt.Sprintf("Error getting cloud labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -100,7 +105,7 @@ func dataSourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("node_labels", nodepool.Spec.NodeLabels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read Nodepool",
+			Summary:  "Failed to read nodepool",
 			Detail:   fmt.Sprintf("Error getting node labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags

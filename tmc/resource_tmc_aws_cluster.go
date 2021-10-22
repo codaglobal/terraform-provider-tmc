@@ -49,13 +49,13 @@ func resourceAwsCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the management cluster used",
+				Description: "Name of an existing management cluster to be used",
 			},
 			"provisioner_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the provisioner",
+				Description: "Name of an existing provisioner to be used",
 			},
 			"cluster_group": {
 				Type:        schema.TypeString,
@@ -66,50 +66,59 @@ func resourceAwsCluster() *schema.Resource {
 			"region": {
 				Type:        schema.TypeString,
 				Description: "Region of the AWS Cluster",
+				ForceNew:    true,
 				Required:    true,
 			},
 			"version": {
 				Type:        schema.TypeString,
 				Description: "Kubernetes version to be used",
+				ForceNew:    true,
 				Required:    true,
 			},
 			"credential_name": {
 				Type:        schema.TypeString,
 				Description: "Kubernetes version of the AWS Cluster",
+				ForceNew:    true,
 				Required:    true,
 			},
 			"availability_zones": {
 				Type:        schema.TypeList,
 				Description: "Availability zones of the control plane node",
 				Required:    true,
+				ForceNew:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				MaxItems:    1,
+				MaxItems:    3,
 			},
 			"instance_type": {
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Description: "Instance type used to deploy the control plane node",
 				Required:    true,
 			},
 			"vpc_cidrblock": {
 				Type:        schema.TypeString,
 				Description: "CIDR block used by the Cluster's VPC",
+				ForceNew:    true,
 				Required:    true,
 			},
 			"pod_cidrblock": {
 				Type:        schema.TypeString,
 				Description: "CIDR block used by the Cluster's Pods",
 				Optional:    true,
+				ForceNew:    true,
 				Default:     "192.168.0.0/16",
 			},
 			"service_cidrblock": {
 				Type:        schema.TypeString,
 				Description: "CIDR block used by the Cluster's Services",
 				Optional:    true,
+				ForceNew:    true,
 				Default:     "10.96.0.0/12",
 			},
 			"ssh_key": {
 				Type:        schema.TypeString,
 				Description: "Name of the SSH Keypair used in the AWS Cluster",
+				ForceNew:    true,
 				Required:    true,
 			},
 		},
@@ -130,24 +139,33 @@ func resourceAwsClusterCreate(ctx context.Context, d *schema.ResourceData, m int
 	cluster_group := d.Get("cluster_group").(string)
 	availability_zones := d.Get("availability_zones").([]interface{})
 
+	if len(availability_zones) == 2 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to create AWS Cluster",
+			Detail:   "number of availability_zones must be either 1 for a development cluster or 3 for a highly available cluster",
+		})
+		return diags
+	}
+
 	opts := &tanzuclient.ClusterOpts{
 		Region:            d.Get("region").(string),
 		Version:           d.Get("version").(string),
 		CredentialName:    d.Get("credential_name").(string),
+		AvailabilityZones: availability_zones,
 		InstanceType:      d.Get("instance_type").(string),
 		VpcCidrBlock:      d.Get("vpc_cidrblock").(string),
 		PodCidrBlock:      d.Get("pod_cidrblock").(string),
 		ServiceCidrBlock:  d.Get("service_cidrblock").(string),
 		SshKey:            d.Get("ssh_key").(string),
-		AvailabilityZones: []string{availability_zones[0].(string)},
 	}
 
 	cluster, err := client.CreateCluster(clusterName, managementClusterName, provisionerName, cluster_group, description, labels, opts)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Create Cluster Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to create AWS cluster",
+			Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}
@@ -170,7 +188,12 @@ func resourceAwsClusterRead(ctx context.Context, d *schema.ResourceData, m inter
 
 	cluster, err := client.GetCluster(clusterName, managementClusterName, provisionerName)
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to read AWS cluster",
+			Detail:   fmt.Sprintf("Error reading resource %s: %s", d.Get("name"), err),
+		})
+		return diags
 	}
 
 	d.Set("resource_version", cluster.Meta.ResourceVersion)
@@ -180,7 +203,7 @@ func resourceAwsClusterRead(ctx context.Context, d *schema.ResourceData, m inter
 	if err := d.Set("labels", cluster.Meta.Labels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read cluster",
+			Summary:  "Failed to read AWS cluster",
 			Detail:   fmt.Sprintf("Error getting labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -222,7 +245,7 @@ func resourceAwsClusterUpdate(ctx context.Context, d *schema.ResourceData, m int
 		PodCidrBlock:      d.Get("pod_cidrblock").(string),
 		ServiceCidrBlock:  d.Get("service_cidrblock").(string),
 		SshKey:            d.Get("ssh_key").(string),
-		AvailabilityZones: []string{availability_zones[0].(string)},
+		AvailabilityZones: availability_zones,
 	}
 
 	if d.HasChange("labels") || d.HasChange("cluster_group") {
@@ -230,8 +253,8 @@ func resourceAwsClusterUpdate(ctx context.Context, d *schema.ResourceData, m int
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Update Cluster Failed",
-				Detail:   err.Error(),
+				Summary:  "Failed to update AWS cluster",
+				Detail:   fmt.Sprintf("Error updating resource %s: %s", d.Get("name"), err),
 			})
 			return diags
 		}
@@ -256,8 +279,8 @@ func resourceAwsClusterDelete(ctx context.Context, d *schema.ResourceData, m int
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Delete Cluster Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to delete AWS cluster",
+			Detail:   fmt.Sprintf("Error deleting resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}

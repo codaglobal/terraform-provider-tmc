@@ -11,7 +11,7 @@ description: |-
 The TMC Cluster resource allows requesting the creation of a nodepool for a AWS cluster in Tanzu Mission Control (TMC). 
 
 ```terraform
-resource "tmc_nodepool" "example" {
+resource "tmc_aws_nodepool" "example" {
   name               = "default-node-pool"
   cluster_name       = "example-cluster
   management_cluster = "example-aws-hosted"

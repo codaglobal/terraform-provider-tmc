@@ -18,12 +18,9 @@ type Network struct {
 	} `json:"cluster"`
 	Provider struct {
 		Vpc struct {
+			Id        string `json:"id,omitempty"`
 			CidrBlock string `json:"cidrBlock"`
 		} `json:"vpc"`
-		Subnets []struct {
-			Id       string `json:"id"`
-			IsPublic bool   `json:"isPublic"`
-		} `json:"subnets,omitempty"`
 	} `json:"provider"`
 }
 
@@ -42,23 +39,9 @@ type AWSCluster struct {
 	Topology struct {
 		ControlPlane struct {
 			AvailabilityZones []string `json:"availabilityZones"`
+			HighAvailability  bool     `json:"highAvailability,omitempty"`
 			InstanceType      string   `json:"instanceType"`
 		} `json:"controlPlane"`
-		NodePools []struct {
-			Spec struct {
-				WorkerNodeCount string `json:"workerNodeCount"`
-				NodeTkgAws      struct {
-					InstanceType     string                   `json:"instanceType"`
-					AvailabilityZone string                   `json:"availabilityZone"`
-					SubnetId         string                   `json:"subnetId"`
-					Version          string                   `json:"version"`
-					NodePlacement    []map[string]interface{} `json:"nodePlacement,omitempty"`
-				} `json:"tkgAws"`
-			} `json:"spec"`
-			Info struct {
-				Name string `json:"name"`
-			} `json:"info"`
-		} `json:"nodePools,omitempty"`
 	} `json:"topology"`
 }
 
@@ -83,7 +66,7 @@ type ClusterOpts struct {
 	Region            string
 	Version           string
 	CredentialName    string
-	AvailabilityZones []string
+	AvailabilityZones []interface{}
 	InstanceType      string
 	VpcCidrBlock      string
 	PodCidrBlock      string
@@ -237,8 +220,16 @@ func buildAwsJsonObject(opts *ClusterOpts) AWSCluster {
 	newAwsSpec.Settings.Security.SshKey = opts.SshKey
 
 	newAwsSpec.Topology.ControlPlane.InstanceType = opts.InstanceType
-	newAwsSpec.Topology.ControlPlane.AvailabilityZones = opts.AvailabilityZones
+
+	var azList []string
+	for i := 0; i < len(opts.AvailabilityZones); i++ {
+		azList = append(azList, opts.AvailabilityZones[i].(string))
+	}
+
+	newAwsSpec.Topology.ControlPlane.AvailabilityZones = azList
+	if len(azList) > 1 {
+		newAwsSpec.Topology.ControlPlane.HighAvailability = true
+	}
 
 	return newAwsSpec
-
 }

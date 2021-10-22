@@ -105,7 +105,12 @@ func dataSourceAwsClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	cluster, err := client.GetCluster(clusterName, managementClusterName, provisionerName)
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to read AWS cluster",
+			Detail:   fmt.Sprintf("Error reading resource %s: %s", d.Get("name"), err),
+		})
+		return diags
 	}
 
 	d.Set("description", cluster.Meta.Description)
@@ -114,7 +119,7 @@ func dataSourceAwsClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("labels", cluster.Meta.Labels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read clustergroup",
+			Summary:  "Failed to read AWS cluster",
 			Detail:   fmt.Sprintf("Error getting labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags

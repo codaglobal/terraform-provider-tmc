@@ -11,7 +11,7 @@ description: |-
 The TMC Nodepool data resource can be used to get the information of a nodepool for a AWS cluster in Tanzu Mission Control (TMC). 
 
 ```terraform
-data "tmc_nodepool" "example" {
+data "tmc_aws_nodepool" "example" {
   name               = "example-node-pool"
   cluster_name       = "example-cluster"
   management_cluster = "example-aws-hosted"
