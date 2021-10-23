@@ -8,6 +8,7 @@ import (
 
 	"github.com/codaglobal/terraform-provider-tmc/tanzuclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -69,16 +70,19 @@ func resourceAwsNodePool() *schema.Resource {
 			},
 			"availability_zone": {
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Description: "Availability zone of the worker node",
 				Required:    true,
 			},
 			"instance_type": {
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Description: "Instance type used to deploy the worker node",
 				Required:    true,
 			},
 			"version": {
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Description: "Kubernetes version to be used",
 				Required:    true,
 			},
@@ -111,6 +115,36 @@ func resourceAwsNodePoolCreate(ctx context.Context, d *schema.ResourceData, m in
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Failed to create AWS nodepool",
+			Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
+		})
+		return diags
+	}
+
+	createStateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"CREATING",
+			"WAITING",
+		},
+		Target: []string{
+			"READY",
+		},
+		Refresh: func() (interface{}, string, error) {
+			resp, err := client.GetNodePool(npName, cluster_name, managementClusterName, provisionerName)
+			if err != nil {
+				return 0, "", err
+			}
+			return resp, resp.Status.Phase, nil
+		},
+		Timeout:                   d.Timeout(schema.TimeoutCreate),
+		Delay:                     10 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+	_, err = createStateConf.WaitForStateContext(ctx)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to create AWS cluster",
 			Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -200,6 +234,36 @@ func resourceAwsNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m in
 				Severity: diag.Error,
 				Summary:  "Failed to update AWS nodepool",
 				Detail:   fmt.Sprintf("Error updating resource %s: %s", d.Get("name"), err),
+			})
+			return diags
+		}
+
+		createStateConf := &resource.StateChangeConf{
+			Pending: []string{
+				"CREATING",
+				"RESIZING",
+			},
+			Target: []string{
+				"READY",
+			},
+			Refresh: func() (interface{}, string, error) {
+				resp, err := client.GetNodePool(npName, cluster_name, managementClusterName, provisionerName)
+				if err != nil {
+					return 0, "", err
+				}
+				return resp, resp.Status.Phase, nil
+			},
+			Timeout:                   d.Timeout(schema.TimeoutCreate),
+			Delay:                     10 * time.Second,
+			MinTimeout:                5 * time.Second,
+			ContinuousTargetOccurence: 3,
+		}
+		_, err = createStateConf.WaitForStateContext(ctx)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to create AWS cluster",
+				Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
 			})
 			return diags
 		}

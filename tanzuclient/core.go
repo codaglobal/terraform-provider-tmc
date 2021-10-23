@@ -25,6 +25,10 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
+type Status struct {
+	Phase string `json:"phase"`
+}
+
 func buildLabelQuery(labels map[string]interface{}) string {
 
 	var query strings.Builder

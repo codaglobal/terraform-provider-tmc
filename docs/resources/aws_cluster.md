@@ -20,14 +20,13 @@ resource "tmc_aws_cluster" "example" {
     env = "example"
     createdby = "terraform"
   }
-  tkg_aws {
-    availability_zones = ["us-east-1a"]
-    instance_type      = "m5.large"
-    vpc_cidrblock      = "10.0.0.0/16"
-    version            = "1.20.8-1-amazon2"
-    credential_name    = "example-aws-cred"
-    ssh_key            = "example-key"
-    region             = "us-east-1"
+  availability_zones = ["us-east-1a"]
+  instance_type      = "m5.large"
+  vpc_cidrblock      = "10.0.0.0/16"
+  version            = "1.20.8-1-amazon2"
+  credential_name    = "example-aws-cred"
+  ssh_key            = "example-key"
+  region             = "us-east-1"
 }
 ```
 

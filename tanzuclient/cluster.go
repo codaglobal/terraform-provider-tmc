@@ -54,6 +54,7 @@ type Cluster struct {
 	FullName *FullName    `json:"fullName"`
 	Meta     *MetaData    `json:"meta"`
 	Spec     *ClusterSpec `json:"spec"`
+	Status   *Status      `json:"status"`
 }
 
 type ClusterJSONObject struct {

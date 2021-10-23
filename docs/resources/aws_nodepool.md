@@ -13,15 +13,13 @@ The TMC Cluster resource allows requesting the creation of a nodepool for a AWS 
 ```terraform
 resource "tmc_aws_nodepool" "example" {
   name               = "default-node-pool"
-  cluster_name       = "example-cluster
+  cluster_name       = "example-cluster"
   management_cluster = "example-aws-hosted"
   provisioner_name   = "example-aws-provisioner"
   worker_node_count  = 1
-  tkg_aws {
-    availability_zone = "us-east-1a"
-    instance_type     = "m5.large"
-    version           = "1.20.8-1-amazon2"
-  }
+  availability_zone = "us-east-1a"
+  instance_type     = "m5.large"
+  version           = "1.20.8-1-amazon2"
 }
 ```
 

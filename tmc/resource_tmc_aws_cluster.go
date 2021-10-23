@@ -7,6 +7,7 @@ import (
 
 	"github.com/codaglobal/terraform-provider-tmc/tanzuclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -170,6 +171,37 @@ func resourceAwsClusterCreate(ctx context.Context, d *schema.ResourceData, m int
 		return diags
 	}
 
+	createStateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"PENDING",
+			"CREATING",
+			"PROCESSING",
+		},
+		Target: []string{
+			"READY",
+		},
+		Refresh: func() (interface{}, string, error) {
+			resp, err := client.GetCluster(clusterName, managementClusterName, provisionerName)
+			if err != nil {
+				return 0, "", err
+			}
+			return resp, resp.Status.Phase, nil
+		},
+		Timeout:                   d.Timeout(schema.TimeoutCreate),
+		Delay:                     10 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+	_, err = createStateConf.WaitForStateContext(ctx)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to create AWS cluster",
+			Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
+		})
+		return diags
+	}
+
 	d.SetId(cluster.Meta.UID)
 
 	resourceAwsClusterRead(ctx, d, m)
@@ -284,6 +316,35 @@ func resourceAwsClusterDelete(ctx context.Context, d *schema.ResourceData, m int
 		})
 		return diags
 	}
+
+	// createStateConf := &resource.StateChangeConf{
+	// 	Pending: []string{
+	// 		"DELETING",
+	// 	},
+	// 	Target: []string{
+	// 		"DELETED",
+	// 	},
+	// 	Refresh: func() (interface{}, string, error) {
+	// 		resp, err := client.GetCluster(clusterName, managementClusterName, provisionerName)
+	// 		if err != nil {
+	// 			return 0, "", err
+	// 		}
+	// 		return resp, resp.Status.Phase, nil
+	// 	},
+	// 	Timeout:                   d.Timeout(schema.TimeoutCreate),
+	// 	Delay:                     10 * time.Second,
+	// 	MinTimeout:                5 * time.Second,
+	// 	ContinuousTargetOccurence: 3,
+	// }
+	// _, err = createStateConf.WaitForStateContext(ctx)
+	// if err != nil {
+	// 	diags = append(diags, diag.Diagnostic{
+	// 		Severity: diag.Error,
+	// 		Summary:  "Failed to delete AWS cluster",
+	// 		Detail:   fmt.Sprintf("Error waiting to delete resource %s: %s", d.Get("name"), err),
+	// 	})
+	// 	return diags
+	// }
 
 	d.SetId("")
 

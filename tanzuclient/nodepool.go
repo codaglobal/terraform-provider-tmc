@@ -32,6 +32,7 @@ type NodePool struct {
 	FullName *NodeName    `json:"fullName"`
 	Meta     *MetaData    `json:"meta"`
 	Spec     *AwsNodePool `json:"spec"`
+	Status   *Status      `json:"status"`
 }
 
 type NodePoolJsonObject struct {
