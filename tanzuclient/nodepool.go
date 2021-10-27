@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type NodeName struct {
@@ -161,4 +162,40 @@ func (c *Client) DeleteNodePool(name string, clusterName string, managementClust
 	}
 
 	return nil
+}
+
+func (c *Client) DescribeNodePool(name string, clusterName string, managementClusterName string, provisionerName string) (*Status, error) {
+	requestURL := fmt.Sprintf("%s/v1alpha1/clusters/%s/nodepools/%s?fullName.managementClusterName=%s&fullName.provisionerName=%s", c.baseURL, clusterName, name, managementClusterName, provisionerName)
+
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token.Token))
+
+	res, err := c.http.Do(req)
+	if err != nil {
+		return &Status{Phase: "ERROR"}, err
+	}
+
+	defer res.Body.Close()
+
+	var target map[string]interface{}
+
+	if err = json.NewDecoder(res.Body).Decode(&target); err != nil {
+		return &Status{Phase: "ERROR"}, err
+	}
+
+	if target["error"] != nil {
+		if strings.Contains(target["error"].(string), "Node Pool Not Found") {
+			resp := &Status{
+				Phase: "DELETED",
+			}
+			return resp, err
+		}
+		return &Status{Phase: "ERROR"}, err
+	}
+
+	return &Status{Phase: "DELETING"}, nil
 }

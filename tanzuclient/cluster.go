@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Network struct {
@@ -197,6 +198,42 @@ func (c *Client) UpdateCluster(name string, managementClusterName string, provis
 	}
 
 	return &res.Cluster, nil
+}
+
+func (c *Client) DescribeCluster(fullName string, managementClusterName string, provisionerName string) (*Status, error) {
+	requestURL := fmt.Sprintf("%s/v1alpha1/clusters/%s?fullName.managementClusterName=%s&fullName.provisionerName=%s", c.baseURL, fullName, managementClusterName, provisionerName)
+
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token.Token))
+
+	res, err := c.http.Do(req)
+	if err != nil {
+		return &Status{Phase: "ERROR"}, err
+	}
+
+	defer res.Body.Close()
+
+	var target map[string]interface{}
+
+	if err = json.NewDecoder(res.Body).Decode(&target); err != nil {
+		return &Status{Phase: "ERROR"}, err
+	}
+
+	if target["error"] != nil {
+		if strings.Contains(target["error"].(string), fmt.Sprintf("Resource not found - cluster(%s)", fullName)) {
+			resp := &Status{
+				Phase: "DELETED",
+			}
+			return resp, err
+		}
+		return &Status{Phase: "ERROR"}, err
+	}
+
+	return &Status{Phase: "DELETING"}, nil
 }
 
 func buildAwsJsonObject(opts *ClusterOpts) AWSCluster {
