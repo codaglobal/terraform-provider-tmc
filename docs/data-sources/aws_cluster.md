@@ -33,12 +33,12 @@ The following arguments are supported:
 * `labels` - A map of labels to assign to the resource.
 * `cluster_group` - A map of labels to assign to the resource.
 * `version` - Version of Kubernetes to be used in the cluster.
-* `credential_name` - Name of the AWS Credentials, that is already available in Tanzu Mission Control (TMC). This will be used to provision thresources in AWS.
+* `credential_name` - Name of the AWS Credentials, that is already available in Tanzu Mission Control (TMC). This will be used to provision the resources in AWS.
 * `ssh_key` - Name of the SSH key pair to be used for the EC2 instances. This key pair can then be used to access the EC2 instances.
 * `region` - AWS region of the cluster.
 * `pod_cidrblock` - Pod CIDR for Kubernetes pods. Defaults to 192.168.0.0/16.
 * `service_cidrblock` - Service CIDR for Kubernetes services. Defaults to 10.96.0.0/12.
-* * [`control_plane_spec`](#control_plane_spec) - Contains information related to the Control Plane of the cluster
+* [`control_plane_spec`](#control_plane_spec) - Contains information related to the Control Plane of the cluster
 
 
 ## Nested Blocks
