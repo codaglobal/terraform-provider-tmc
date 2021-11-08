@@ -27,16 +27,17 @@ resource "tmc_aws_nodepool" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Nodepool. Changing the name forces recreation of this resource.
-* `description` - (Optional) The description of the nodepool.
-* `node_labels` - (Optional) A map of node labels to assign to the resource.
-* `cloud_labels` - (Optional) A map of cloud labels to assign to the resource.
-* `cluster_name` - (Required) The name of the Tanzu Cluster for which the nodepool is to be created.
-* `management_cluster` - (Required) Name of the management cluster used to provision the cluster.
-* `provisioner_name` - (Required) Name of the provisioner to be used.
-* `availability_zone` - (Required) The AWS availability zone for the cluster's worker nodes.
-* `instance_type` - (Required) Instance type of the EC2 nodes to be used as part of the nodepool.
-* `version` - (Required) Version of Kubernetes to be used in the cluster.
+* `name` - (Required) (Forces Replacement) The name of the Nodepool. Changing the name forces recreation of this resource.
+* `description` - (Optional) (Forces Replacement) The description of the nodepool.
+* `node_labels` - (Optional) (Forces Replacement) A map of node labels to assign to the resource.
+* `cloud_labels` - (Optional) (Forces Replacement) A map of cloud labels to assign to the resource.
+* `cluster_name` - (Required) (Forces Replacement) The name of the Tanzu Cluster for which the nodepool is to be created.
+* `management_cluster` - (Required) (Forces Replacement) Name of the management cluster used to provision the cluster.
+* `provisioner_name` - (Required) (Forces Replacement) Name of the provisioner to be used.
+* `availability_zone` - (Required) (Forces Replacement) The AWS availability zone for the cluster's worker nodes.
+* `instance_type` - (Required) (Forces Replacement) Instance type of the EC2 nodes to be used as part of the nodepool.
+* `version` - (Required) (Forces Replacement) Version of Kubernetes to be used in the cluster.
+* `worker_node_count` - (Required) Number of nodes to be created in the nodepool
 
 
 ## Attributes Reference
