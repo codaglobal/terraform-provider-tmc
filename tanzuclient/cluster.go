@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type Subnet struct {
+	Id       string `json:"id"`
+	IsPublic bool   `json:"isPublic"`
+}
+
 type Network struct {
 	ClusterNetwork struct {
 		Pods []struct {
@@ -22,6 +27,7 @@ type Network struct {
 			Id        string `json:"id,omitempty"`
 			CidrBlock string `json:"cidrBlock"`
 		} `json:"vpc"`
+		Subnets []Subnet `json:"subnets"`
 	} `json:"provider"`
 }
 
@@ -65,15 +71,13 @@ type ClusterJSONObject struct {
 // Options interface for passing arguments to the
 // functions neccessary to perform on the Cluster
 type ClusterOpts struct {
-	Region            string
-	Version           string
-	CredentialName    string
-	AvailabilityZones []interface{}
-	InstanceType      string
-	VpcCidrBlock      string
-	PodCidrBlock      string
-	ServiceCidrBlock  string
-	SshKey            string
+	Region           string
+	Version          string
+	CredentialName   string
+	ControlPlaneSpec map[string]interface{}
+	PodCidrBlock     string
+	ServiceCidrBlock string
+	SshKey           string
 }
 
 func (c *Client) GetCluster(fullName string, managementClusterName string, provisionerName string) (*Cluster, error) {
@@ -253,20 +257,43 @@ func buildAwsJsonObject(opts *ClusterOpts) AWSCluster {
 	}, 1)
 	newAwsSpec.Settings.Network.ClusterNetwork.Services[0].CidrBlocks = opts.ServiceCidrBlock
 
-	newAwsSpec.Settings.Network.Provider.Vpc.CidrBlock = opts.VpcCidrBlock
-
 	newAwsSpec.Settings.Security.SshKey = opts.SshKey
 
-	newAwsSpec.Topology.ControlPlane.InstanceType = opts.InstanceType
+	cp_spec := opts.ControlPlaneSpec
 
+	newAwsSpec.Topology.ControlPlane.InstanceType = cp_spec["instance_type"].(string)
 	var azList []string
-	for i := 0; i < len(opts.AvailabilityZones); i++ {
-		azList = append(azList, opts.AvailabilityZones[i].(string))
+	for i := 0; i < len((cp_spec["availability_zones"]).([]interface{})); i++ {
+		azList = append(azList, (cp_spec["availability_zones"]).([]interface{})[i].(string))
 	}
 
 	newAwsSpec.Topology.ControlPlane.AvailabilityZones = azList
 	if len(azList) > 1 {
 		newAwsSpec.Topology.ControlPlane.HighAvailability = true
+	}
+
+	if cp_spec["vpc_id"] != nil {
+		newAwsSpec.Settings.Network.Provider.Vpc.Id = cp_spec["vpc_id"].(string)
+
+		pvt_subnets := cp_spec["private_subnets"].([]interface{})
+		pub_subnets := cp_spec["public_subnets"].([]interface{})
+
+		newAwsSpec.Settings.Network.Provider.Subnets = make([]Subnet, 0)
+
+		for i := 0; i < len(pvt_subnets); i++ {
+			public_subnet_map := &Subnet{
+				Id:       pub_subnets[i].(string),
+				IsPublic: true,
+			}
+			private_subnet_map := &Subnet{
+				Id:       pvt_subnets[i].(string),
+				IsPublic: false,
+			}
+			newAwsSpec.Settings.Network.Provider.Subnets = append(newAwsSpec.Settings.Network.Provider.Subnets, *private_subnet_map, *public_subnet_map)
+		}
+
+	} else {
+		newAwsSpec.Settings.Network.Provider.Vpc.CidrBlock = cp_spec["vpc_cidrblock"].(string)
 	}
 
 	return newAwsSpec

@@ -59,22 +59,6 @@ func dataSourceAwsCluster() *schema.Resource {
 				Description: "Kubernetes version of the AWS Cluster",
 				Computed:    true,
 			},
-			"availability_zones": {
-				Type:        schema.TypeList,
-				Description: "Availability zones of the control plane node",
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"instance_type": {
-				Type:        schema.TypeString,
-				Description: "Instance type used to deploy the control plane node",
-				Computed:    true,
-			},
-			"vpc_cidrblock": {
-				Type:        schema.TypeString,
-				Description: "CIDR block used by the Cluster's VPC",
-				Computed:    true,
-			},
 			"ssh_key": {
 				Type:        schema.TypeString,
 				Description: "Name of the SSH Keypair used in the AWS Cluster",
@@ -89,6 +73,48 @@ func dataSourceAwsCluster() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "CIDR block used by the Cluster's Services",
 				Computed:    true,
+			},
+			"control_plane_spec": {
+				Type:        schema.TypeList,
+				Description: "Contains information related to the Control Plane of the cluster",
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_type": {
+							Type:        schema.TypeString,
+							Description: "Instance type used to deploy the control plane node",
+							Computed:    true,
+						},
+						"availability_zones": {
+							Type:        schema.TypeList,
+							Description: "Availability zones of the control plane node",
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:        schema.TypeString,
+							Description: "ID of an existing VPC to be used",
+							Computed:    true,
+						},
+						"vpc_cidrblock": {
+							Type:        schema.TypeString,
+							Description: "CIDR block used by the Cluster's VPC",
+							Computed:    true,
+						},
+						"private_subnets": {
+							Type:        schema.TypeList,
+							Description: "IDs of the private subnets in the specified availability zones",
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+						"public_subnets": {
+							Type:        schema.TypeList,
+							Description: "IDs of the public subnets in the specified availability zones",
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -125,15 +151,25 @@ func dataSourceAwsClusterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 
-	d.Set("availability_zones", cluster.Spec.TkgAws.Topology.ControlPlane.AvailabilityZones)
-	d.Set("instance_type", cluster.Spec.TkgAws.Topology.ControlPlane.InstanceType)
-	d.Set("vpc_cidrblock", cluster.Spec.TkgAws.Settings.Network.Provider.Vpc.CidrBlock)
 	d.Set("region", cluster.Spec.TkgAws.Distribution.Region)
 	d.Set("credential_name", cluster.Spec.TkgAws.Distribution.ProvisionerCredentialName)
 	d.Set("version", cluster.Spec.TkgAws.Distribution.Version)
 	d.Set("ssh_key", cluster.Spec.TkgAws.Settings.Security.SshKey)
 	d.Set("pod_cidrblock", cluster.Spec.TkgAws.Settings.Network.ClusterNetwork.Pods[0].CidrBlocks)
 	d.Set("service_cidrblock", cluster.Spec.TkgAws.Settings.Network.ClusterNetwork.Services[0].CidrBlocks)
+
+	cp_spec := flatten_aws_control_plane_spec(cluster.Spec)
+	spec := make([]map[string]interface{}, 0)
+	spec = append(spec, cp_spec)
+
+	if err := d.Set("control_plane_spec", spec); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to read AWS cluster",
+			Detail:   fmt.Sprintf("Error getting control plane information for resource %s: %s", d.Get("name"), err),
+		})
+		return diags
+	}
 
 	d.SetId(string(cluster.Meta.UID))
 
