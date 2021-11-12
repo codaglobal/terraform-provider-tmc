@@ -10,6 +10,7 @@ type FullName struct {
 	Name                  string `json:"name"`
 	ManagementClusterName string `json:"managementClusterName"`
 	ProvisionerName       string `json:"provisionerName,omitempty"`
+	ClusterName           string `json:"clusterName,omitempty"`
 }
 
 type MetaData struct {
@@ -20,13 +21,24 @@ type MetaData struct {
 	Annotations     map[string]string      `json:"annotations,omitempty"`
 }
 
+type Status struct {
+	Phase string `json:"phase,omitempty"`
+}
+
+type LabelSelector struct {
+	MatchLabels      map[string]interface{} `json:"matchLabels,omitempty"`
+	MatchExpressions []MatchExpressions     `json:"matchExpressions,omitempty"`
+}
+
+type MatchExpressions struct {
+	Key      string   `json:"key"`
+	Operator string   `json:"operator"`
+	Values   []string `json:"values"`
+}
+
 type errorResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
-}
-
-type Status struct {
-	Phase string `json:"phase"`
 }
 
 func buildLabelQuery(labels map[string]interface{}) string {
