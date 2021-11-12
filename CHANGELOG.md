@@ -44,3 +44,4 @@ Enhancements:
 Enhancements:
 - Added `tmc_aws_cluster` resource and data source
 - Added `tmc_cluster_backup` resource and data source
+- Added `tmc_aws_nodepool` resource and data source
