@@ -9,6 +9,8 @@ type FullName struct {
 	OrgID                 string `json:"orgId"`
 	Name                  string `json:"name"`
 	ManagementClusterName string `json:"managementClusterName"`
+	ProvisionerName       string `json:"provisionerName,omitempty"`
+	ClusterName           string `json:"clusterName,omitempty"`
 }
 
 type MetaData struct {
@@ -16,6 +18,21 @@ type MetaData struct {
 	Description string                 `json:"description"`
 	Labels      map[string]interface{} `json:"labels,omitempty"`
 	Annotations map[string]string      `json:"annotations,omitempty"`
+}
+
+type Status struct {
+	Phase string `json:"phase,omitempty"`
+}
+
+type LabelSelector struct {
+	MatchLabels      map[string]interface{} `json:"matchLabels,omitempty"`
+	MatchExpressions []MatchExpressions     `json:"matchExpressions,omitempty"`
+}
+
+type MatchExpressions struct {
+	Key      string   `json:"key"`
+	Operator string   `json:"operator"`
+	Values   []string `json:"values"`
 }
 
 type errorResponse struct {
