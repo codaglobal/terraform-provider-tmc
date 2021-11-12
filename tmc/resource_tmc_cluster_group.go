@@ -27,6 +27,13 @@ func resourceTmcClusterGroup() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Unique Name of the Tanzu Cluster Group in your Org",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if !IsValidTanzuName(v) {
+						errs = append(errs, fmt.Errorf("name should contain only lowercase letters, numbers or hyphens and should begin with either an alphabet or number"))
+					}
+					return
+				},
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -56,8 +63,8 @@ func resourceTmcClusterGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Create ClusterGroup Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to create cluster group",
+			Detail:   fmt.Sprintf("Error creating resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}
@@ -81,8 +88,8 @@ func resourceTmcClusterGroupRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Read ClusterGroup Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to read cluster group",
+			Detail:   fmt.Sprintf("Error reading resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}
@@ -91,7 +98,7 @@ func resourceTmcClusterGroupRead(ctx context.Context, d *schema.ResourceData, m 
 	if err := d.Set("labels", clusterGroup.Meta.Labels); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Failed to read ClusterGroup",
+			Summary:  "Failed to read cluster group",
 			Detail:   fmt.Sprintf("Error setting labels for resource %s: %s", d.Get("name"), err),
 		})
 		return diags
@@ -117,8 +124,8 @@ func resourceTmcClusterGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Update ClusterGroup Failed",
-				Detail:   "Cannot Update Cluster Group with the given values",
+				Summary:  "Failed to update cluster group",
+				Detail:   fmt.Sprintf("Error updating resource %s: %s", d.Get("name"), err),
 			})
 			return diags
 		}
@@ -141,8 +148,8 @@ func resourceTmcClusterGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Delete ClusterGroup Failed",
-			Detail:   err.Error(),
+			Summary:  "Failed to delete cluster group",
+			Detail:   fmt.Sprintf("Error deleting resource %s: %s", d.Get("name"), err),
 		})
 		return diags
 	}

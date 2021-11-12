@@ -14,10 +14,11 @@ type FullName struct {
 }
 
 type MetaData struct {
-	UID         string                 `json:"uid"`
-	Description string                 `json:"description"`
-	Labels      map[string]interface{} `json:"labels,omitempty"`
-	Annotations map[string]string      `json:"annotations,omitempty"`
+	UID             string                 `json:"uid"`
+	Description     string                 `json:"description"`
+	Labels          map[string]interface{} `json:"labels,omitempty"`
+	ResourceVersion string                 `json:"resourceVersion,omitempty"`
+	Annotations     map[string]string      `json:"annotations,omitempty"`
 }
 
 type Status struct {
