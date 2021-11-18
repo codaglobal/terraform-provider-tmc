@@ -14,12 +14,13 @@ The TMC Cluster resource allows requesting the creation of a nodepool for a AWS 
 resource "tmc_aws_nodepool" "example" {
   name               = "default-node-pool"
   cluster_name       = "example-cluster"
+  cluster_id         = "abcdefghigklmnop"
   management_cluster = "example-aws-hosted"
   provisioner_name   = "example-aws-provisioner"
   worker_node_count  = 1
-  availability_zone = "us-east-1a"
-  instance_type     = "m5.large"
-  version           = "1.20.8-1-amazon2"
+  availability_zone  = "us-east-1a"
+  instance_type      = "m5.large"
+  version            = "1.20.8-1-amazon2"
 }
 ```
 
@@ -32,6 +33,7 @@ The following arguments are supported:
 * `node_labels` - (Optional) (Forces Replacement) A map of node labels to assign to the resource.
 * `cloud_labels` - (Optional) (Forces Replacement) A map of cloud labels to assign to the resource.
 * `cluster_name` - (Required) (Forces Replacement) The name of the Tanzu Cluster for which the nodepool is to be created.
+* `cluster_id` - (Required) (Forces Replacement) The unique ID of the cluster for which the nodepool is to be created
 * `management_cluster` - (Required) (Forces Replacement) Name of the management cluster used to provision the cluster.
 * `provisioner_name` - (Required) (Forces Replacement) Name of the provisioner to be used.
 * `availability_zone` - (Required) (Forces Replacement) The AWS availability zone for the cluster's worker nodes.
