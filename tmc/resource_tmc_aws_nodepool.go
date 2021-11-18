@@ -130,6 +130,7 @@ func resourceAwsNodePoolCreate(ctx context.Context, d *schema.ResourceData, m in
 		Pending: []string{
 			"CREATING",
 			"WAITING",
+			"UPGRADING",
 		},
 		Target: []string{
 			"READY",
@@ -260,6 +261,8 @@ func resourceAwsNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m in
 			Pending: []string{
 				"CREATING",
 				"RESIZING",
+				"WAITING",
+				"UPGRADING",
 			},
 			Target: []string{
 				"READY",
