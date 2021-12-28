@@ -43,6 +43,7 @@ func Provider() *schema.Provider {
 			"tmc_aws_storage_credential":         dataSourceTmcAwsStorageCredential(),
 			"tmc_observability_credential":       dataSourceTmcObservabilityCredential(),
 			"tmc_cluster_backup":                 dataSourceTmcClusterBackup(),
+			"tmc_cluster_admin_kubeconfig":       dataSourceAdminKubeConfig(),
 		},
 
 		// List of Resources supported by the provider
