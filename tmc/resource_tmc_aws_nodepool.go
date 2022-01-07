@@ -43,6 +43,12 @@ func resourceAwsNodePool() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the cluster in which the nodepool is present",
 			},
+			"cluster_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Unique ID of the cluster in which the nodepool is present",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -124,6 +130,7 @@ func resourceAwsNodePoolCreate(ctx context.Context, d *schema.ResourceData, m in
 		Pending: []string{
 			"CREATING",
 			"WAITING",
+			"UPGRADING",
 		},
 		Target: []string{
 			"READY",
@@ -177,6 +184,18 @@ func resourceAwsNodePoolRead(ctx context.Context, d *schema.ResourceData, m inte
 		})
 		return diags
 	}
+
+	cluster, err := client.GetCluster(cluster_name, managementClusterName, provisionerName)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Failed to read AWS nodepool",
+			Detail:   fmt.Sprintf("Error reading resource %s: %s", d.Get("name"), err),
+		})
+		return diags
+	}
+
+	d.Set("cluster_id", cluster.Meta.UID)
 
 	nodeCount, _ := strconv.Atoi(nodepool.Spec.WorkerNodeCount)
 
@@ -242,6 +261,8 @@ func resourceAwsNodePoolUpdate(ctx context.Context, d *schema.ResourceData, m in
 			Pending: []string{
 				"CREATING",
 				"RESIZING",
+				"WAITING",
+				"UPGRADING",
 			},
 			Target: []string{
 				"READY",
