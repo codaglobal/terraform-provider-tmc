@@ -56,6 +56,7 @@ func Provider() *schema.Provider {
 			"tmc_aws_storage_credential":         resourceTmcAwsStorageCredential(),
 			"tmc_observability_credential":       resourceTmcObservabilityCredential(),
 			"tmc_cluster_backup":                 resourceTmcClusterBackup(),
+			"tmc_cluster_scan":                   resourceTmcScan(),
 		},
 	}
 
