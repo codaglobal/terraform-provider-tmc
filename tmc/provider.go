@@ -43,6 +43,7 @@ func Provider() *schema.Provider {
 			"tmc_aws_storage_credential":         dataSourceTmcAwsStorageCredential(),
 			"tmc_observability_credential":       dataSourceTmcObservabilityCredential(),
 			"tmc_cluster_backup":                 dataSourceTmcClusterBackup(),
+			"tmc_namespace":                      dataSourceTmcNamespace(),
 		},
 
 		// List of Resources supported by the provider
@@ -57,6 +58,7 @@ func Provider() *schema.Provider {
 			"tmc_observability_credential":       resourceTmcObservabilityCredential(),
 			"tmc_cluster_backup":                 resourceTmcClusterBackup(),
 			"tmc_vsphere_cluster":                resourceVsphereCluster(),
+			"tmc_namespace":                      resourceTmcNamespace(),
 		},
 	}
 

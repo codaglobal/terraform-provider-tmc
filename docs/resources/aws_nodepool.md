@@ -1,12 +1,12 @@
 ---
-page_title: "TMC: tmc_nodepool"
+page_title: "TMC: tmc_aws_nodepool"
 layout: "tmc"
 subcategory: "TKG Cluster"
 description: |-
   Creates and manages a nodepool for a AWS cluster in the TMC platform
 ---
 
-# Resource: tmc_cluster
+# Resource: tmc_aws_nodepool
 
 The TMC Cluster resource allows requesting the creation of a nodepool for a AWS cluster in Tanzu Mission Control (TMC). 
 
