@@ -24,3 +24,15 @@ func InvalidTanzuNameError(resourceName string) diag.Diagnostics {
 
 	return diags
 }
+
+func isValidK8sProviderType(lookup string) bool {
+	switch lookup {
+	case
+		"tkg",
+		"tkgservice",
+		"tkghosted",
+		"other":
+		return true
+	}
+	return false
+}
