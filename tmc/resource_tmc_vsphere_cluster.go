@@ -60,6 +60,7 @@ func resourceVsphereCluster() *schema.Resource {
 			"cluster_group": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the cluster group",
 			},
 			"labels": labelsSchemaImmutable(),
@@ -110,6 +111,7 @@ func resourceVsphereCluster() *schema.Resource {
 				Type:        schema.TypeList,
 				Description: "Contains specifications for a nodepool which is part of the cluster",
 				Required:    true,
+				ForceNew:    true,
 				MinItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -161,10 +163,12 @@ func resourceVsphereClusterCreate(ctx context.Context, d *schema.ResourceData, m
 	nodePoolOpts := makeNodepoolOpts(d.Get("nodepool").([]interface{}))
 
 	opts := &tanzuclient.VsphereOpts{
-		Version:      d.Get("version").(string),
-		Class:        controlPlaneSpec["class"].(string),
-		StorageClass: controlPlaneSpec["storage_class"].(string),
-		NodepoolOpts: nodePoolOpts,
+		Version:          d.Get("version").(string),
+		Class:            controlPlaneSpec["class"].(string),
+		StorageClass:     controlPlaneSpec["storage_class"].(string),
+		PodCidrBlock:     d.Get("pod_cidrblock").(string),
+		ServiceCidrBlock: d.Get("service_cidrblock").(string),
+		NodepoolOpts:     nodePoolOpts,
 	}
 
 	vSphereCluster, err := client.CreateVsphereCluster(clusterName, managementClusterName, provisionerName, cluster_group, description, labels, opts)

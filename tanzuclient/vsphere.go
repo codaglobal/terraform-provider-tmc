@@ -16,7 +16,7 @@ type Volume struct {
 }
 
 type VsphereControlPlane struct {
-	Volumes      []Volume `json:"volumes"`
+	Volumes      []Volume `json:"volumes,omitempty"`
 	Class        string   `json:"class"`
 	StorageClass string   `json:"storageClass"`
 }
@@ -37,7 +37,7 @@ type Vsphere struct {
 	} `json:"distribution"`
 	Topology struct {
 		ControlPlane VsphereControlPlane `json:"controlPlane"`
-		NodePools    []VsphereNodepool   `json:"nodepools"`
+		NodePools    []VsphereNodepool   `json:"nodePools"`
 	} `json:"topology"`
 }
 
@@ -76,11 +76,12 @@ type VpshereNodepoolOpts struct {
 }
 
 type VsphereOpts struct {
-	Version      string
-	Volumes      []Volume
-	Class        string
-	StorageClass string
-	NodepoolOpts []VpshereNodepoolOpts
+	Version          string
+	Class            string
+	StorageClass     string
+	PodCidrBlock     string
+	ServiceCidrBlock string
+	NodepoolOpts     []VpshereNodepoolOpts
 }
 
 func (c *Client) GetVsphereCluster(fullName string, managementClusterName string, provisionerName string) (*VsphereCluster, error) {
@@ -117,6 +118,36 @@ func (c *Client) CreateVsphereCluster(name string, managementClusterName string,
 		Spec: &VsphereSpec{
 			ClusterGroupName: cluster_group,
 			TkgVsphereService: Vsphere{
+				Settings: struct {
+					Network struct {
+						Pods struct {
+							CidrBlocks []string "json:\"cidrBlocks\""
+						} "json:\"pods\""
+						Services struct {
+							CidrBlocks []string "json:\"cidrBlocks\""
+						} "json:\"services\""
+					} "json:\"network\""
+				}{
+					Network: struct {
+						Pods struct {
+							CidrBlocks []string "json:\"cidrBlocks\""
+						} "json:\"pods\""
+						Services struct {
+							CidrBlocks []string "json:\"cidrBlocks\""
+						} "json:\"services\""
+					}{
+						Pods: struct {
+							CidrBlocks []string "json:\"cidrBlocks\""
+						}{
+							CidrBlocks: []string{opts.PodCidrBlock},
+						},
+						Services: struct {
+							CidrBlocks []string "json:\"cidrBlocks\""
+						}{
+							CidrBlocks: []string{opts.ServiceCidrBlock},
+						},
+					},
+				},
 				Distribution: struct {
 					Version string "json:\"version\""
 				}{
@@ -124,7 +155,7 @@ func (c *Client) CreateVsphereCluster(name string, managementClusterName string,
 				},
 				Topology: struct {
 					ControlPlane VsphereControlPlane "json:\"controlPlane\""
-					NodePools    []VsphereNodepool   "json:\"nodepools\""
+					NodePools    []VsphereNodepool   "json:\"nodePools\""
 				}{
 					ControlPlane: VsphereControlPlane{
 						Class:        opts.Class,
